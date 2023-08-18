@@ -23,3 +23,31 @@ kind: Secret
 metadata:
   name: tuto-quarkus-k8s-greeting-secret
   namespace: tuto-quarkus-k8s
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: tuto-quarkus-k8s-example-pv
+spec:
+  capacity:
+    storage: 25Mi
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tuto-quarkus-k8s-example-pvc
+  namespace: tuto-quarkus-k8s
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Mi

@@ -159,6 +159,95 @@ Three ways to inject environment variables :
   - configMapRef:
       name: tuto-quarkus-k8s-greeting-cm
   ```
+  
+## Volumes
+Some supported volumes :
+- **_Secret_**
+  ```properties
+  # Format : quarkus.kubernetes.secret-volumes.<VOLUME_NAME>.secret-name=<NAME OF SECRET> 
+  quarkus.kubernetes.secret-volumes.secret-volume.secret-name=tuto-quarkus-k8s-greeting-secret
+  
+  # Volume Mounting
+  # Format : quarkus.kubernetes.mounts.<VOLUME_NAME>.path=<MOUNT_PATH> 
+  quarkus.kubernetes.mounts.secret-volume.path=/tmp/secret
+  ```
+  ```yaml
+  # Result
+  volumes:
+  - name: secret-volume
+    secret:
+      secretName: tuto-quarkus-k8s-greeting-secret
+  ...
+  containers:
+  - volumeMounts:
+    - mountPath: /tmp/secret
+      name: secret-volume
+  ```
+  
+- **_ConfigMap_**
+  ```properties
+  # Format : quarkus.kubernetes.config-map-volumes.<VOLUME_NAME>.config-map-name=<NAME OF CONFIGMAP> 
+  quarkus.kubernetes.config-map-volumes.cm-volume.config-map-name=tuto-quarkus-k8s-greeting-cm
+  
+  # Volume Mounting
+  # Format : quarkus.kubernetes.mounts.<VOLUME_NAME>.path=<MOUNT_PATH> 
+  quarkus.kubernetes.mounts.cm-volume.path=/tmp/cm
+  ```
+    ```yaml
+  # Result
+  volumes:
+  - name: cm-volume
+    configMap:
+      name: tuto-quarkus-k8s-greeting-cm
+  ...
+  containers:
+  - volumeMounts:
+    - mountPath: /tmp/cm
+      name: cm-volume
+  ```
+
+- **_Persistent Volume Claim_**
+  ```properties
+  # Format : quarkus.kubernetes.pvc-volumes.<VOLUME_NAME>.claim-name=<NAME OF PVC> 
+  quarkus.kubernetes.pvc-volumes.pvc-volume.claim-name=tuto-quarkus-k8s-example-pvc 
+  
+  # Volume Mounting
+  # Format : quarkus.kubernetes.mounts.<VOLUME_NAME>.path=<MOUNT_PATH> 
+  quarkus.kubernetes.mounts.pvc-volume.path=/tmp/pvc
+  ```
+  ```yaml
+  # Result
+  volumes:
+  - name: pvc-volume
+    persistentVolumeClaim:
+      claimName: tuto-quarkus-k8s-greeting-pvc
+  ...
+  containers:
+  - volumeMounts:
+    - mountPath: /tmp/pvc
+      name: pvc-volume
+  ```
+
+- **_Empty Dir_**
+  ```properties
+  # Format : quarkus.kubernetes.empty-dir-volumes=<LIST OF VOLUME_NAME. Separate by ","> 
+  quarkus.kubernetes.empty-dir-volumes=empty-volume
+  
+  # Volume Mounting
+  # Format : quarkus.kubernetes.mounts.<VOLUME_NAME>.path=<MOUNT_PATH> 
+  quarkus.kubernetes.mounts.empty-volume.path=/tmp/empty
+  ```
+  ```yaml
+  # Result
+  volumes:
+  - name: empty-volume
+    emptyDir: {}
+  ...
+  containers:
+  - volumeMounts:
+    - mountPath: /tmp/pvc
+      name: pvc-volume
+  ```
 
 <!-- All resources links -->
 [job-configuration]:  https://quarkus.io/guides/deploying-to-kubernetes#quarkus-kubernetes-kubernetes-config_quarkus.kubernetes.job.parallelism
