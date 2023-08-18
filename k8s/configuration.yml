@@ -1,0 +1,25 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tuto-quarkus-k8s
+
+---
+
+apiVersion: v1
+data:
+  GREETING_NAME_CM: RESTEasy Reactive CM
+kind: ConfigMap
+metadata:
+  name: tuto-quarkus-k8s-greeting-cm
+  namespace: tuto-quarkus-k8s
+
+---
+
+apiVersion: v1
+data:
+  GREETING_NAME_CM: UkVTVEVhc3kgUmVhdGl2ZSBTRUNSRVQ=
+kind: Secret
+metadata:
+  name: tuto-quarkus-k8s-greeting-secret
+  namespace: tuto-quarkus-k8s
