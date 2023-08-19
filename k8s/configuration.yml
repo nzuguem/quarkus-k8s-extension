@@ -18,7 +18,7 @@ metadata:
 
 apiVersion: v1
 data:
-  GREETING_NAME_CM: UkVTVEVhc3kgUmVhdGl2ZSBTRUNSRVQ=
+  GREETING_NAME_SECRET: UkVTVEVhc3kgUmVhdGl2ZSBTRUNSRVQ=
 kind: Secret
 metadata:
   name: tuto-quarkus-k8s-greeting-secret

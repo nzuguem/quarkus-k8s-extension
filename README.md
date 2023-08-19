@@ -1,8 +1,9 @@
-# [Kubernetes Extension][quarkus-k8s-extension], Késako ?
-Extension that supports automatic generation of manifests for Kubernetes, OpenShift, Knative platforms. It is based on the **_[Dekorate][dekorate]_** lib, and configurations (in the form of quarkus properties) supplied by users. \
-_In this tutorial we use the Kuberneters platform by default._
+# [Quarkus Kubernetes Extension][quarkus-k8s-extension], Késako ?
+Extension that supports automatic generation of manifests for Kubernetes, OpenShift, Knative platforms. It is based on the **_[Dekorate][dekorate]_** lib, 
+and configurations (in the form of quarkus properties) supplied by users. \
+_In this tutorial we use the Kubernetes platform by default._
 
-Kubernetes manifests are generated at application build (`./gradlew build`) time in `build/kuberneters`
+Kubernetes manifests are generated at application build (`./gradlew build`) time in `build/kubernetes`
 
 Manifest output directory can be changed :
 ```properties
@@ -117,6 +118,7 @@ Three ways to inject environment variables :
   quarkus.kubernetes.env.mapping.greeting-name-secret.with-key=GREETING_NAME_SECRET
   
   # Field
+  # Format : quarkus.kubernetes.env.fields.<ENV_KEY>=<POD FIELD PATH>
   quarkus.kubernetes.env.fields.instance-name=metadata.name
   ```
   ```yaml
@@ -248,6 +250,71 @@ Some supported volumes :
     - mountPath: /tmp/pvc
       name: pvc-volume
   ```
+  
+> In addition to defining the volumes and their mounts (`Secret` & `ConfigMap`), if you need to use them as an application configuration (**_SmallRye Config_**), you'll need to define the `SMALLRYE_CONFIG_LOCATIONS=/tmp/cm,/temp/secret` variable.
+>
+> With the quarkus kubernetes extension, these steps (_volume definition, mounting and definition of `SMALLRYE_CONFIG_LOCATIONS`_) can be combined in a single configuration :  
+>```properties
+>  # Format: quarkus.kubernetes.app-secret=<NAME OF SECRET> 
+>  quarkus.kubernetes.app-secret=tuto-quarkus-k8s-greeting-secret
+>  # Format: quarkus.kubernetes.app-config-map=<NAME OF CONFIGMAP> 
+>  quarkus.kubernetes.app-config-map=tuto-quarkus-k8s-greeting-cm
+>```
+
+## Replicas
+Par défaut le nombre de replicas est défini à 1. Mais nous pouvons l'étendre via :
+```properties
+quarkus.kubernetes.replicas=3
+```
+_This configuration only concerns `Deployment` and `StatefulSet`_
+
+## Health Check Probes
+The strength of quarkus lies in its extensions and the way they can be composed.
+
+By adding the `smallrye-health` extension, all health probes will be present by default in the application and in k8s manifests.
+
+```yaml
+# Result
+containers:
+- livenessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /q/health/live
+      port: 8080
+      scheme: HTTP
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 10
+  
+  readinessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /q/health/ready
+      port: 8080
+      scheme: HTTP
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    successThreshold: 1
+    timeoutSeconds: 10
+  startupProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /q/health/started
+      port: 8080
+      scheme: HTTP
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 10
+```
+To customize these probes, please refer to the [SmallRye Health documentation][quarkus-smallrye-health-extension].
+We can override the default configurations derived from the `kubernetes` + `smallrye-health` extension composition. All configurations are available [here][probes-configuration] \
+Example :
+```properties
+quarkus.kubernetes.readiness-probe.initial-delay=10s # Type is java.time.Duration
+quarkus.kubernetes.readiness-probe.period=5s         # Type is java.time.Duration
+```
 
 <!-- All resources links -->
 [job-configuration]:  https://quarkus.io/guides/deploying-to-kubernetes#quarkus-kubernetes-kubernetes-config_quarkus.kubernetes.job.parallelism
@@ -256,3 +323,5 @@ Some supported volumes :
 [quarkus-k8s-extension]: https://quarkus.io/guides/deploying-to-kubernetes
 [dekorate]: https://dekorate.io/
 [quarkus-container-image-extension]: https://quarkus.io/guides/container-image
+[quarkus-smallrye-health-extension]: https://quarkus.io/guides/smallrye-health
+[probes-configuration]: https://quarkus.io/guides/deploying-to-kubernetes#quarkus-kubernetes-kubernetes-config_quarkus.kubernetes.liveness-probe.http-action-port
