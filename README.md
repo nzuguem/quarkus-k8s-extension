@@ -316,6 +316,106 @@ quarkus.kubernetes.readiness-probe.initial-delay=10s # Type is java.time.Duratio
 quarkus.kubernetes.readiness-probe.period=5s         # Type is java.time.Duration
 ```
 
+## Resources Management
+Resource management is fairly intuitive: 
+```properties
+quarkus.kubernetes.resources.requests.memory=512Mi
+quarkus.kubernetes.resources.requests.cpu=1000m
+quarkus.kubernetes.resources.limits.memory=512Mi
+```
+```yaml
+# Result
+containers:
+- resources:
+    limits:
+      memory: 512Mi
+    requests:
+      cpu: 1000m
+      memory: 512Mi
+```
+
+## Exposing an application
+To expose our application via Ingress Resource, simply do
+```properties
+quarkus.kubernetes.ingress.expose=true
+```
+```yaml
+# Result
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    app.quarkus.io/position: "1"
+  labels:
+    app.kubernetes.io/name: quarkus-k8s
+    app.kubernetes.io/part-of: tutorials
+    app.quarkus.io/author: Kevin.Nzuguem
+    app.kubernetes.io/managed-by: quarkus
+  name: quarkus-k8s
+  namespace: tuto-quarkus-k8s
+spec:
+  rules:
+    - http:
+        paths:
+          - backend:
+              service:
+                name: quarkus-k8s
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
+```
+We can add configuration to the generated rule. For example, define a `host` or `path`.
+> ⚠️ The `path` must correspond to a route exposed by the application, otherwise you'll have to think about rewriting it according to your ingress controller.
+```properties
+quarkus.kubernetes.ingress.host=prod.svc.url
+# The term http in the configuration corresponds to the name of the service port to be exposed
+quarkus.kubernetes.ports.http.path=/prod
+```
+```yaml
+# Result
+...
+rules:
+- host: prod.svc.url
+  http:
+    paths:
+      - backend:
+          service:
+            name: quarkus-k8s
+            port:
+              name: http
+        path: /prod
+        pathType: Prefix
+```
+
+We can add further rules as follows :
+```properties
+# Format : quarkus.kubernetes.ingress.rules.<FREE_KEY>.<INGRESS_CONF_KEY>=<INGRESS_CONF_VALUE> 
+quarkus.kubernetes.ingress.rules.1.host=<INGRESS_RULE_HOST>
+quarkus.kubernetes.ingress.rules.1.path=<INGRESS_RULE_PATH>
+quarkus.kubernetes.ingress.rules.1.service-name=<SERVICE_NAME_TO_EXPOSED>
+quarkus.kubernetes.ingress.rules.1.service-port-name=<SERVICE_PORT_NAME_TO_EXPOSED>
+```
+
+### Securing ingress resources
+Securing a resource requires a private key and a TLS certificate (in our case, self-signed). This information must be stored in a TLS Secret. Execute this command:
+```shell
+# Creation of a private key and a TLS certificate, then stored in a TLS k8s secret
+bash k8s/generate-tls-secret.sh   
+```
+To activate the securing of ingress resources, simply do : 
+```properties
+# Format : quarkus.kubernetes.ingress.tls.<SECRET_NAME>.enabled=<true | false>
+quarkus.kubernetes.ingress.tls.tuto-quarkus-k8s-tls-secret.enabled=true
+```
+```yaml
+# Result
+rules:
+...
+tls:
+- secretName: tuto-quarkus-k8s-tls-secret
+```
+
 <!-- All resources links -->
 [job-configuration]:  https://quarkus.io/guides/deploying-to-kubernetes#quarkus-kubernetes-kubernetes-config_quarkus.kubernetes.job.parallelism
 [cron-job-configuration]: https://quarkus.io/guides/deploying-to-kubernetes#quarkus-kubernetes-kubernetes-config_quarkus.kubernetes.cron-job.parallelism
